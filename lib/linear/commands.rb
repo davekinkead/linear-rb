@@ -28,6 +28,21 @@ module Linear
       end
     end
 
+    def list_issues(options = {}, client: Client.new)
+      filter = {}
+      filter[:project] = { id: { eq: options[:project] } } if options[:project]
+      filter[:state] = { name: { eq: options[:state] } } if options[:state]
+
+      result = client.query(Queries::LIST_ISSUES, { filter: filter })
+
+      issues = result.dig("data", "issues", "nodes") || []
+      if issues.empty?
+        puts "No issues found"
+      else
+        display_issue_list(issues)
+      end
+    end
+
     def my_issues(client: Client.new)
       result = client.query(Queries::MY_ISSUES)
 

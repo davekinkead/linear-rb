@@ -44,6 +44,27 @@ module Linear
       }
     GQL
 
+    LIST_ISSUES = <<~GQL
+      query($filter: IssueFilter!) {
+        issues(filter: $filter) {
+          nodes {
+            id
+            identifier
+            title
+            state {
+              name
+              type
+            }
+            assignee {
+              name
+            }
+            priority
+            url
+          }
+        }
+      }
+    GQL
+
     MY_ISSUES = <<~GQL
       query {
         viewer {

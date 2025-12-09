@@ -13,11 +13,16 @@ def show_usage
       linear mine                             Show issues assigned to you
       linear teams                            List all teams
       linear projects                         List all projects
+      linear issues [OPTIONS]                 List issues with optional filters
       linear comment ISSUE_ID COMMENT         Add a comment to an issue
       linear update ISSUE_ID STATE            Update issue state
 
     Search Options:
       --team TEAM_KEY                   Filter by team key
+      --state STATE                     Filter by state name
+
+    Issues Options:
+      --project PROJECT_ID              Filter by project ID
       --state STATE                     Filter by state name
 
     Examples:
@@ -26,6 +31,7 @@ def show_usage
       linear mine
       linear teams
       linear projects
+      linear issues --project=abc123 --state=Backlog
       linear comment FAT-85 "This is done"
       linear update FAT-85 "Done"
 
@@ -93,6 +99,20 @@ when 'teams'
 when 'projects'
   begin
     Linear::Commands.list_projects
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'issues'
+  options = {}
+  OptionParser.new do |opts|
+    opts.on("--project PROJECT", "Filter by project ID") { |v| options[:project] = v }
+    opts.on("--state STATE", "Filter by state name") { |v| options[:state] = v }
+  end.parse!
+
+  begin
+    Linear::Commands.list_issues(options)
   rescue => e
     puts "Error: #{e.message}"
     exit 1

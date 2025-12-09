@@ -101,6 +101,27 @@ RSpec.describe 'bin/linear', type: :integration do
     end
   end
 
+  describe 'issues command' do
+    context 'with valid options', :live do
+      it 'lists issues with state filter' do
+        puts "\n→ Running: linear issues --state=Backlog"
+        result = run_command('issues', '--state=Backlog')
+        puts result[:stdout]
+        puts "(exit code: #{result[:status].exitstatus})"
+      end
+    end
+
+    context 'without options' do
+      it 'lists all issues' do
+        result = run_command('issues')
+        # Should either succeed or fail with helpful error
+        unless result[:status].success?
+          expect(result[:stdout]).to include('Error:')
+        end
+      end
+    end
+  end
+
   describe 'mine command', :live do
     it 'displays assigned issues' do
       puts "\n→ Running: linear mine"

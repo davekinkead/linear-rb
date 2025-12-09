@@ -101,6 +101,64 @@ RSpec.describe Linear::Commands do
     end
   end
 
+  describe '.list_issues' do
+    context 'when issues are found with filters' do
+      let(:issues_data) do
+        {
+          'data' => {
+            'issues' => {
+              'nodes' => [
+                {
+                  'identifier' => 'FAT-456',
+                  'title' => 'Implement new feature',
+                  'state' => { 'name' => 'Backlog' },
+                  'assignee' => { 'name' => 'Jane Smith' },
+                  'priority' => 3,
+                  'url' => 'https://linear.app/issue/FAT-456'
+                },
+                {
+                  'identifier' => 'FAT-789',
+                  'title' => 'Fix bug',
+                  'state' => { 'name' => 'Backlog' },
+                  'assignee' => nil,
+                  'priority' => 1,
+                  'url' => 'https://linear.app/issue/FAT-789'
+                }
+              ]
+            }
+          }
+        }
+      end
+
+      it 'lists issues filtered by project and state' do
+        options = { project: 'project-123', state: 'Backlog' }
+        filter = { project: { id: { eq: 'project-123' } }, state: { name: { eq: 'Backlog' } } }
+
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::LIST_ISSUES, { filter: filter })
+          .and_return(issues_data)
+          .once
+
+        output = capture_stdout { described_class.list_issues(options, client: mock_client) }
+        expect(output).to match(/Found 2 issue/)
+        expect(output).to match(/FAT-456/)
+        expect(output).to match(/FAT-789/)
+      end
+    end
+
+    context 'when no issues are found' do
+      let(:issues_data) { { 'data' => { 'issues' => { 'nodes' => [] } } } }
+
+      it 'displays no issues message' do
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::LIST_ISSUES, { filter: {} })
+          .and_return(issues_data)
+
+        expect { described_class.list_issues({}, client: mock_client) }.to output(/No issues found/).to_stdout
+      end
+    end
+  end
+
   describe '.my_issues' do
     context 'when user has assigned issues' do
       let(:my_issues_data) do
