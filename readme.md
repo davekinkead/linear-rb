@@ -10,16 +10,6 @@ A lightweight Ruby CLI wrapper for the Linear GraphQL API. Built for efficiency 
 gem install linear-rb
 ```
 
-### Local development
-
-```bash
-# Clone and install locally
-git clone https://github.com/davekinkead/linear-rb.git
-cd linear-rb
-gem build linear-rb.gemspec
-gem install linear-rb-0.1.0.gem
-```
-
 ### Direct usage (without installing)
 
 ```bash
@@ -85,14 +75,14 @@ linear teams
 ### Add a comment to an issue
 
 ```bash
-linear comment FAT-85 "This looks good to me"
+linear comment DEV-85 "This looks good to me"
 ```
 
 ### Update issue state
 
 ```bash
 # Move issue to a different state
-linear update FAT-85 "Done"
+linear update DEV-85 "Done"
 linear update ENG-123 "In Progress"
 ```
 
@@ -123,9 +113,9 @@ result = client.query(Linear::Queries::ISSUE, { id: "ENG-123" })
 Linear::Commands.fetch_issue("ENG-123")
 Linear::Commands.search("bug", team: "ENG")
 Linear::Commands.my_issues
-Linear::Commands.add_comment("FAT-85", "Great work!")
-Linear::Commands.update_issue_state("FAT-85", "Done")
-Linear::Commands.update_issue_description("FAT-85", "Updated description")
+Linear::Commands.add_comment("DEV-85", "Great work!")
+Linear::Commands.update_issue_state("ENG-85", "Done")
+Linear::Commands.update_issue_description("MKT-85", "Updated description")
 ```
 
 
@@ -141,6 +131,31 @@ gem build linear-rb.gemspec
 # Install locally
 gem install linear-rb-0.1.0.gem
 ```
+
+### Testing
+
+The project includes both unit tests and integration tests:
+
+```bash
+# Run all tests (skips live API tests by default)
+rspec
+
+# Run tests with live API integration
+LINEAR_API_KEY=your_key rspec
+
+# Run only integration tests
+rspec spec/integration/
+
+# Run specific test file
+rspec spec/linear/client_spec.rb
+```
+
+**Test Structure:**
+- `spec/linear/` - Unit tests with mocked API responses
+- `spec/integration/` - Integration tests for the CLI binary
+  - Tests tagged with `:live` require a valid `LINEAR_API_KEY` and will make real API calls
+  - Live tests display command output and intent rather than making assertions
+  - Useful for verifying the CLI works end-to-end with real Linear data
 
 ## License
 
