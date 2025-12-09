@@ -2,7 +2,7 @@ Gem::Specification.new do |spec|
   spec.name          = "linear-rb"
   spec.version       = "0.1.0"
   spec.authors       = ["Dave Kinkead"]
-  spec.email         = [""]
+  spec.email         = ["hi@davekinkead.com"]
 
   spec.summary       = "Ruby CLI wrapper for Linear GraphQL API"
   spec.description   = "Efficient command-line interface for interacting with Linear's GraphQL API"
@@ -16,4 +16,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # No runtime dependencies - uses stdlib only
+
+  spec.add_development_dependency "rspec", "~> 3.13"
 end

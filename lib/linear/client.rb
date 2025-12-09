@@ -6,7 +6,7 @@ module Linear
     BASE_URL = "https://api.linear.app/graphql"
 
     def initialize(api_key = nil)
-      @api_key = api_key || Config.api_key
+      @api_key = api_key || ENV['LINEAR_API_KEY']
       raise "No API key configured. Set LINEAR_API_KEY environment variable" unless @api_key
     end
 

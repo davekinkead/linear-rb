@@ -2,8 +2,7 @@ module Linear
   module Commands
     extend self
 
-    def fetch_issue(issue_id)
-      client = Client.new
+    def fetch_issue(issue_id, client: Client.new)
       result = client.query(Queries::ISSUE, { id: issue_id })
 
       issue = result.dig("data", "issue")
@@ -14,9 +13,7 @@ module Linear
       end
     end
 
-    def search(query, options = {})
-      client = Client.new
-
+    def search(query, options = {}, client: Client.new)
       filter = { title: { contains: query } }
       filter[:team] = { key: { eq: options[:team] } } if options[:team]
       filter[:state] = { name: { eq: options[:state] } } if options[:state]
@@ -31,8 +28,7 @@ module Linear
       end
     end
 
-    def my_issues
-      client = Client.new
+    def my_issues(client: Client.new)
       result = client.query(Queries::MY_ISSUES)
 
       issues = result.dig("data", "viewer", "assignedIssues", "nodes") || []
@@ -43,8 +39,7 @@ module Linear
       end
     end
 
-    def list_teams
-      client = Client.new
+    def list_teams(client: Client.new)
       result = client.query(Queries::TEAMS)
 
       teams = result.dig("data", "teams", "nodes") || []
@@ -53,9 +48,7 @@ module Linear
       end
     end
 
-    def add_comment(issue_id, body)
-      client = Client.new
-
+    def add_comment(issue_id, body, client: Client.new)
       # First get the issue to get its internal ID
       issue_result = client.query(Queries::ISSUE, { id: issue_id })
       issue = issue_result.dig("data", "issue")
@@ -77,9 +70,7 @@ module Linear
       end
     end
 
-    def update_issue_state(issue_id, state_name)
-      client = Client.new
-
+    def update_issue_state(issue_id, state_name, client: Client.new)
       # Get the issue details including team
       issue_result = client.query(Queries::ISSUE, { id: issue_id })
       issue = issue_result.dig("data", "issue")
@@ -128,9 +119,7 @@ module Linear
       end
     end
 
-    def update_issue_description(issue_id, description)
-      client = Client.new
-
+    def update_issue_description(issue_id, description, client: Client.new)
       # Get the issue to get its internal ID
       issue_result = client.query(Queries::ISSUE, { id: issue_id })
       issue = issue_result.dig("data", "issue")
@@ -172,9 +161,9 @@ module Linear
       issues.each do |issue|
         state_badge = "[#{issue['state']['name']}]".ljust(15)
         priority_badge = priority_label(issue['priority']).ljust(8)
-        assignee = issue.dig('assignee', 'name') || 'Unassigned'
+        assignee = (issue.dig('assignee', 'name') || 'Unassigned').ljust(15)
 
-        puts "#{issue['identifier'].ljust(12)} #{state_badge} #{priority_badge} #{issue['title']}"
+        puts "#{issue['identifier'].ljust(12)} #{state_badge} #{priority_badge} #{assignee} #{issue['title']}"
       end
       puts ""
     end
