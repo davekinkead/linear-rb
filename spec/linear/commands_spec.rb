@@ -88,6 +88,18 @@ RSpec.describe Linear::Commands do
         expect(output).to match(/Found 1 issue/)
         expect(output).to match(/FAT-123/)
       end
+
+      it 'filters by state case-insensitively' do
+        options = { state: 'in progress' }
+        filter = { title: { contains: query }, state: { name: { eqIgnoreCase: 'in progress' } } }
+
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::SEARCH_ISSUES, { filter: filter })
+          .and_return(search_data)
+
+        output = capture_stdout { described_class.search(query, options, client: mock_client) }
+        expect(output).to match(/Found 1 issue/)
+      end
     end
 
     context 'when no issues are found' do
@@ -132,7 +144,7 @@ RSpec.describe Linear::Commands do
 
       it 'lists issues filtered by project and state' do
         options = { project: 'project-123', state: 'Backlog' }
-        filter = { project: { id: { eq: 'project-123' } }, state: { name: { eq: 'Backlog' } } }
+        filter = { project: { id: { eq: 'project-123' } }, state: { name: { eqIgnoreCase: 'Backlog' } } }
 
         expect(mock_client).to receive(:query)
           .with(Linear::Queries::LIST_ISSUES, { filter: filter })
@@ -143,6 +155,18 @@ RSpec.describe Linear::Commands do
         expect(output).to match(/Found 2 issue/)
         expect(output).to match(/FAT-456/)
         expect(output).to match(/FAT-789/)
+      end
+
+      it 'filters state case-insensitively' do
+        options = { state: 'backlog' }
+        filter = { state: { name: { eqIgnoreCase: 'backlog' } } }
+
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::LIST_ISSUES, { filter: filter })
+          .and_return(issues_data)
+
+        output = capture_stdout { described_class.list_issues(options, client: mock_client) }
+        expect(output).to match(/Found 2 issue/)
       end
     end
 

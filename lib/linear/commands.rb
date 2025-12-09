@@ -16,7 +16,7 @@ module Linear
     def search(query, options = {}, client: Client.new)
       filter = { title: { contains: query } }
       filter[:team] = { key: { eq: options[:team] } } if options[:team]
-      filter[:state] = { name: { eq: options[:state] } } if options[:state]
+      filter[:state] = { name: { eqIgnoreCase: options[:state] } } if options[:state]
 
       result = client.query(Queries::SEARCH_ISSUES, { filter: filter })
 
@@ -31,7 +31,7 @@ module Linear
     def list_issues(options = {}, client: Client.new)
       filter = {}
       filter[:project] = { id: { eq: options[:project] } } if options[:project]
-      filter[:state] = { name: { eq: options[:state] } } if options[:state]
+      filter[:state] = { name: { eqIgnoreCase: options[:state] } } if options[:state]
 
       result = client.query(Queries::LIST_ISSUES, { filter: filter })
 
