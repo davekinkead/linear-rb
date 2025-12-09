@@ -1,0 +1,132 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/linear'
+require 'optparse'
+
+def show_usage
+  puts <<~USAGE
+    Linear CLI - Ruby wrapper for Linear GraphQL API
+
+    Usage:
+      linear issue ISSUE_ID                   Fetch issue details
+      linear search QUERY [OPTIONS]           Search for issues
+      linear mine                             Show issues assigned to you
+      linear teams                            List all teams
+      linear comment ISSUE_ID COMMENT         Add a comment to an issue
+      linear update ISSUE_ID STATE            Update issue state
+
+    Search Options:
+      --team TEAM_KEY                   Filter by team key
+      --state STATE                     Filter by state name
+
+    Examples:
+      linear issue ENG-123
+      linear search "bug fix" --team=ENG --state=Backlog
+      linear mine
+      linear comment FAT-85 "This is done"
+      linear update FAT-85 "Done"
+
+    Configuration:
+      Set the LINEAR_API_KEY environment variable with your API key from:
+      https://linear.app/settings/api
+  USAGE
+end
+
+command = ARGV.shift
+
+case command
+when 'issue'
+  issue_id = ARGV.shift
+  if issue_id.nil? || issue_id.empty?
+    puts "Error: issue ID required"
+    puts "Usage: linear issue ISSUE_ID"
+    exit 1
+  end
+
+  begin
+    Linear::Commands.fetch_issue(issue_id)
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'search'
+  query = ARGV.shift
+  if query.nil? || query.empty?
+    puts "Error: search query required"
+    puts "Usage: linear search QUERY [--team TEAM] [--state STATE]"
+    exit 1
+  end
+
+  options = {}
+  OptionParser.new do |opts|
+    opts.on("--team TEAM", "Filter by team key") { |v| options[:team] = v }
+    opts.on("--state STATE", "Filter by state name") { |v| options[:state] = v }
+  end.parse!
+
+  begin
+    Linear::Commands.search(query, options)
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'mine'
+  begin
+    Linear::Commands.my_issues
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'teams'
+  begin
+    Linear::Commands.list_teams
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'comment'
+  issue_id = ARGV.shift
+  comment_body = ARGV.shift
+
+  if issue_id.nil? || issue_id.empty? || comment_body.nil? || comment_body.empty?
+    puts "Error: issue ID and comment text required"
+    puts "Usage: linear comment ISSUE_ID \"comment text\""
+    exit 1
+  end
+
+  begin
+    Linear::Commands.add_comment(issue_id, comment_body)
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'update'
+  issue_id = ARGV.shift
+  state_name = ARGV.shift
+
+  if issue_id.nil? || issue_id.empty? || state_name.nil? || state_name.empty?
+    puts "Error: issue ID and state name required"
+    puts "Usage: linear update ISSUE_ID \"State Name\""
+    exit 1
+  end
+
+  begin
+    Linear::Commands.update_issue_state(issue_id, state_name)
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'help', '--help', '-h', nil
+  show_usage
+
+else
+  puts "Unknown command: #{command}"
+  puts ""
+  show_usage
+  exit 1
+end
