@@ -12,6 +12,7 @@ def show_usage
       linear search QUERY [OPTIONS]           Search for issues
       linear mine                             Show issues assigned to you
       linear teams                            List all teams
+      linear projects                         List all projects
       linear comment ISSUE_ID COMMENT         Add a comment to an issue
       linear update ISSUE_ID STATE            Update issue state
 
@@ -23,6 +24,8 @@ def show_usage
       linear issue ENG-123
       linear search "bug fix" --team=ENG --state=Backlog
       linear mine
+      linear teams
+      linear projects
       linear comment FAT-85 "This is done"
       linear update FAT-85 "Done"
 
@@ -82,6 +85,14 @@ when 'mine'
 when 'teams'
   begin
     Linear::Commands.list_teams
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'projects'
+  begin
+    Linear::Commands.list_projects
   rescue => e
     puts "Error: #{e.message}"
     exit 1

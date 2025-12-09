@@ -40,6 +40,27 @@ RSpec.describe 'bin/linear', type: :integration do
     end
   end
 
+  describe 'projects command' do
+    context 'when API key is configured', :live do
+      it 'lists projects' do
+        puts "\n→ Running: linear projects"
+        result = run_command('projects')
+        puts result[:stdout]
+        puts "(exit code: #{result[:status].exitstatus})"
+      end
+    end
+
+    context 'when API key is missing' do
+      it 'displays error message' do
+        result = run_command('projects')
+        # Will either succeed if key exists, or fail with helpful message
+        unless result[:status].success?
+          expect(result[:stdout]).to include('Error:')
+        end
+      end
+    end
+  end
+
   describe 'issue command' do
     context 'when issue ID is missing' do
       it 'displays error and usage' do

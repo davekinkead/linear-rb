@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "linear-rb"
-  spec.version       = "0.1.0"
+  spec.version       = "0.1.1"
   spec.authors       = ["Dave Kinkead"]
   spec.email         = ["hi@davekinkead.com"]
 

@@ -76,6 +76,27 @@ module Linear
       }
     GQL
 
+    PROJECTS = <<~GQL
+      query {
+        projects {
+          nodes {
+            id
+            name
+            description
+            state
+            progress
+            startDate
+            targetDate
+            url
+            lead {
+              name
+              email
+            }
+          }
+        }
+      }
+    GQL
+
     WORKFLOW_STATES = <<~GQL
       query($teamId: String!) {
         team(id: $teamId) {

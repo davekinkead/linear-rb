@@ -48,6 +48,17 @@ module Linear
       end
     end
 
+    def list_projects(client: Client.new)
+      result = client.query(Queries::PROJECTS)
+
+      projects = result.dig("data", "projects", "nodes") || []
+      if projects.empty?
+        puts "No projects found"
+      else
+        display_project_list(projects)
+      end
+    end
+
     def add_comment(issue_id, body, client: Client.new)
       # First get the issue to get its internal ID
       issue_result = client.query(Queries::ISSUE, { id: issue_id })
@@ -176,6 +187,31 @@ module Linear
       when 3 then "Medium"
       when 4 then "Low"
       else "Unknown"
+      end
+    end
+
+    def display_project_list(projects)
+      puts "\nFound #{projects.length} project(s):\n\n"
+      projects.each do |project|
+        state_badge = "[#{project['state']}]".ljust(15)
+        progress = project['progress'] ? "#{(project['progress'] * 100).round}%" : "0%"
+        progress_badge = progress.ljust(6)
+        lead = (project.dig('lead', 'name') || 'No lead').ljust(20)
+
+        puts "#{project['name'].ljust(30)} #{state_badge} #{progress_badge} #{lead}"
+
+        if project['description'] && !project['description'].empty?
+          # Show first line of description
+          first_line = project['description'].lines.first&.strip
+          puts "  #{first_line[0..80]}#{'...' if first_line && first_line.length > 80}" if first_line
+        end
+
+        if project['targetDate']
+          puts "  Target: #{project['targetDate']}"
+        end
+
+        puts "  URL: #{project['url']}" if project['url']
+        puts ""
       end
     end
   end
