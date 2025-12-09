@@ -55,64 +55,6 @@ RSpec.describe Linear::Commands do
     end
   end
 
-  describe '.search' do
-    let(:query) { 'authentication' }
-
-    context 'when issues are found' do
-      let(:search_data) do
-        {
-          'data' => {
-            'issues' => {
-              'nodes' => [
-                {
-                  'identifier' => 'FAT-123',
-                  'title' => 'Fix authentication bug',
-                  'state' => { 'name' => 'In Progress' },
-                  'assignee' => { 'name' => 'John Doe' },
-                  'priority' => 2,
-                  'url' => 'https://linear.app/issue/FAT-123'
-                }
-              ]
-            }
-          }
-        }
-      end
-
-      it 'searches and displays matching issues' do
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::SEARCH_ISSUES, { filter: { title: { contains: query } } })
-          .and_return(search_data)
-          .once
-
-        output = capture_stdout { described_class.search(query, {}, client: mock_client) }
-        expect(output).to match(/Found 1 issue/)
-        expect(output).to match(/FAT-123/)
-      end
-
-      it 'filters by state case-insensitively' do
-        options = { state: 'in progress' }
-        filter = { title: { contains: query }, state: { name: { eqIgnoreCase: 'in progress' } } }
-
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::SEARCH_ISSUES, { filter: filter })
-          .and_return(search_data)
-
-        output = capture_stdout { described_class.search(query, options, client: mock_client) }
-        expect(output).to match(/Found 1 issue/)
-      end
-    end
-
-    context 'when no issues are found' do
-      let(:search_data) { { 'data' => { 'issues' => { 'nodes' => [] } } } }
-
-      it 'displays no issues message' do
-        expect(mock_client).to receive(:query).and_return(search_data)
-
-        expect { described_class.search(query, {}, client: mock_client) }.to output(/No issues found matching: authentication/).to_stdout
-      end
-    end
-  end
-
   describe '.list_issues' do
     context 'when issues are found with filters' do
       let(:issues_data) do
@@ -157,9 +99,49 @@ RSpec.describe Linear::Commands do
         expect(output).to match(/FAT-789/)
       end
 
+      it 'filters by query text' do
+        options = { query: 'authentication' }
+        filter = { title: { contains: 'authentication' } }
+
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::LIST_ISSUES, { filter: filter })
+          .and_return(issues_data)
+
+        output = capture_stdout { described_class.list_issues(options, client: mock_client) }
+        expect(output).to match(/Found 2 issue/)
+      end
+
+      it 'filters by team' do
+        options = { team: 'ENG' }
+        filter = { team: { key: { eq: 'ENG' } } }
+
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::LIST_ISSUES, { filter: filter })
+          .and_return(issues_data)
+
+        output = capture_stdout { described_class.list_issues(options, client: mock_client) }
+        expect(output).to match(/Found 2 issue/)
+      end
+
       it 'filters state case-insensitively' do
         options = { state: 'backlog' }
         filter = { state: { name: { eqIgnoreCase: 'backlog' } } }
+
+        expect(mock_client).to receive(:query)
+          .with(Linear::Queries::LIST_ISSUES, { filter: filter })
+          .and_return(issues_data)
+
+        output = capture_stdout { described_class.list_issues(options, client: mock_client) }
+        expect(output).to match(/Found 2 issue/)
+      end
+
+      it 'combines multiple filters' do
+        options = { query: 'bug', state: 'in progress', team: 'ENG' }
+        filter = {
+          title: { contains: 'bug' },
+          state: { name: { eqIgnoreCase: 'in progress' } },
+          team: { key: { eq: 'ENG' } }
+        }
 
         expect(mock_client).to receive(:query)
           .with(Linear::Queries::LIST_ISSUES, { filter: filter })

@@ -8,30 +8,47 @@ def show_usage
     Linear CLI - Ruby wrapper for Linear GraphQL API
 
     Usage:
-      linear issue ISSUE_ID                   Fetch issue details
-      linear search QUERY [OPTIONS]           Search for issues
+      linear issue ISSUE_ID                   Fetch a specific issue by ID
+      linear issues [OPTIONS]                 List and filter issues (all filters are optional)
       linear mine                             Show issues assigned to you
       linear teams                            List all teams
       linear projects                         List all projects
-      linear issues [OPTIONS]                 List issues with optional filters
       linear comment ISSUE_ID COMMENT         Add a comment to an issue
       linear update ISSUE_ID STATE            Update issue state
 
-    Search Options:
-      --team TEAM_KEY                   Filter by team key
-      --state STATE                     Filter by state name
-
-    Issues Options:
+    Issues Filters (all optional, can be combined):
+      --query TEXT                      Search by title text
       --project PROJECT_ID              Filter by project ID
-      --state STATE                     Filter by state name
+      --state STATE                     Filter by state name (case-insensitive)
+      --team TEAM_KEY                   Filter by team key
 
     Examples:
+      # View a specific issue
       linear issue ENG-123
-      linear search "bug fix" --team=ENG --state=Backlog
+
+      # List all issues
+      linear issues
+
+      # Search issues by title
+      linear issues --query "authentication"
+
+      # Filter by state (case-insensitive)
+      linear issues --state backlog
+      linear issues --state "In Progress"
+
+      # Filter by team
+      linear issues --team ENG
+
+      # Combine multiple filters
+      linear issues --query "bug" --state Backlog --team ENG
+      linear issues --project abc123 --state Done
+
+      # Your assigned issues
       linear mine
+
+      # Other commands
       linear teams
       linear projects
-      linear issues --project=abc123 --state=Backlog
       linear comment FAT-85 "This is done"
       linear update FAT-85 "Done"
 
@@ -54,27 +71,6 @@ when 'issue'
 
   begin
     Linear::Commands.fetch_issue(issue_id)
-  rescue => e
-    puts "Error: #{e.message}"
-    exit 1
-  end
-
-when 'search'
-  query = ARGV.shift
-  if query.nil? || query.empty?
-    puts "Error: search query required"
-    puts "Usage: linear search QUERY [--team TEAM] [--state STATE]"
-    exit 1
-  end
-
-  options = {}
-  OptionParser.new do |opts|
-    opts.on("--team TEAM", "Filter by team key") { |v| options[:team] = v }
-    opts.on("--state STATE", "Filter by state name") { |v| options[:state] = v }
-  end.parse!
-
-  begin
-    Linear::Commands.search(query, options)
   rescue => e
     puts "Error: #{e.message}"
     exit 1
@@ -107,8 +103,10 @@ when 'projects'
 when 'issues'
   options = {}
   OptionParser.new do |opts|
+    opts.on("--query QUERY", "Filter by title text") { |v| options[:query] = v }
     opts.on("--project PROJECT", "Filter by project ID") { |v| options[:project] = v }
     opts.on("--state STATE", "Filter by state name") { |v| options[:state] = v }
+    opts.on("--team TEAM", "Filter by team key") { |v| options[:team] = v }
   end.parse!
 
   begin

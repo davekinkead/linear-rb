@@ -81,31 +81,25 @@ RSpec.describe 'bin/linear', type: :integration do
     end
   end
 
-  describe 'search command' do
-    context 'when query is missing' do
-      it 'displays error and usage' do
-        result = run_command('search')
-        expect(result[:stdout]).to include('Error: search query required')
-        expect(result[:stdout]).to include('Usage: linear search QUERY')
-        expect(result[:status].success?).to be false
-      end
-    end
-
-    context 'with valid query', :live do
-      it 'executes search' do
-        puts "\n→ Running: linear search test"
-        result = run_command('search', 'test')
-        puts result[:stdout]
-        puts "(exit code: #{result[:status].exitstatus})"
-      end
-    end
-  end
-
   describe 'issues command' do
     context 'with valid options', :live do
       it 'lists issues with state filter' do
         puts "\n→ Running: linear issues --state=Backlog"
         result = run_command('issues', '--state=Backlog')
+        puts result[:stdout]
+        puts "(exit code: #{result[:status].exitstatus})"
+      end
+
+      it 'searches issues by query text' do
+        puts "\n→ Running: linear issues --query test"
+        result = run_command('issues', '--query', 'test')
+        puts result[:stdout]
+        puts "(exit code: #{result[:status].exitstatus})"
+      end
+
+      it 'combines multiple filters' do
+        puts "\n→ Running: linear issues --query bug --state Backlog"
+        result = run_command('issues', '--query', 'bug', '--state', 'Backlog')
         puts result[:stdout]
         puts "(exit code: #{result[:status].exitstatus})"
       end
