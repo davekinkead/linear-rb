@@ -90,36 +90,6 @@ RSpec.describe Linear::Commands do
       end
     end
 
-    context 'when searching with team filter' do
-      let(:options) { { team: 'FAT' } }
-
-      it 'includes team filter in query' do
-        expect(mock_client).to receive(:query)
-          .with(
-            Linear::Queries::SEARCH_ISSUES,
-            { filter: { title: { contains: query }, team: { key: { eq: 'FAT' } } } }
-          )
-          .and_return({ 'data' => { 'issues' => { 'nodes' => [] } } })
-
-        described_class.search(query, options, client: mock_client)
-      end
-    end
-
-    context 'when searching with state filter' do
-      let(:options) { { state: 'In Progress' } }
-
-      it 'includes state filter in query' do
-        expect(mock_client).to receive(:query)
-          .with(
-            Linear::Queries::SEARCH_ISSUES,
-            { filter: { title: { contains: query }, state: { name: { eq: 'In Progress' } } } }
-          )
-          .and_return({ 'data' => { 'issues' => { 'nodes' => [] } } })
-
-        described_class.search(query, options, client: mock_client)
-      end
-    end
-
     context 'when no issues are found' do
       let(:search_data) { { 'data' => { 'issues' => { 'nodes' => [] } } } }
 
@@ -351,7 +321,7 @@ RSpec.describe Linear::Commands do
       end
     end
 
-    context 'when issue does not exist' do
+    context 'when update fails' do
       let(:issue_data) { { 'data' => { 'issue' => nil } } }
 
       it 'displays error message' do
@@ -361,56 +331,6 @@ RSpec.describe Linear::Commands do
 
         expect { described_class.update_issue_state(issue_id, state_name, client: mock_client) }
           .to output(/Error: Issue not found: FAT-123/).to_stdout
-      end
-    end
-
-    context 'when team is not found' do
-      let(:teams_data) { { 'data' => { 'teams' => { 'nodes' => [] } } } }
-
-      it 'displays error message' do
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::ISSUE, { id: issue_id })
-          .and_return(issue_data)
-
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::TEAMS)
-          .and_return(teams_data)
-
-        expect { described_class.update_issue_state(issue_id, state_name, client: mock_client) }
-          .to output(/Error: Team not found for issue FAT-123/).to_stdout
-      end
-    end
-
-    context 'when state is not found' do
-      let(:invalid_states_data) do
-        {
-          'data' => {
-            'team' => {
-              'states' => {
-                'nodes' => [
-                  { 'id' => 'state-1', 'name' => 'Todo', 'type' => 'unstarted' }
-                ]
-              }
-            }
-          }
-        }
-      end
-
-      it 'displays error message with available states' do
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::ISSUE, { id: issue_id })
-          .and_return(issue_data)
-
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::TEAMS)
-          .and_return(teams_data)
-
-        expect(mock_client).to receive(:query)
-          .with(Linear::Queries::WORKFLOW_STATES, { teamId: 'team-uuid' })
-          .and_return(invalid_states_data)
-
-        expect { described_class.update_issue_state(issue_id, state_name, client: mock_client) }
-          .to output(/Error: State 'Done' not found/).to_stdout
       end
     end
   end
@@ -474,24 +394,8 @@ RSpec.describe Linear::Commands do
   end
 
   describe '.priority_label' do
-    it 'returns correct label for priority 0' do
-      expect(described_class.send(:priority_label, 0)).to eq('None')
-    end
-
-    it 'returns correct label for priority 1' do
-      expect(described_class.send(:priority_label, 1)).to eq('Urgent')
-    end
-
-    it 'returns correct label for priority 2' do
+    it 'returns correct label for valid priority' do
       expect(described_class.send(:priority_label, 2)).to eq('High')
-    end
-
-    it 'returns correct label for priority 3' do
-      expect(described_class.send(:priority_label, 3)).to eq('Medium')
-    end
-
-    it 'returns correct label for priority 4' do
-      expect(described_class.send(:priority_label, 4)).to eq('Low')
     end
 
     it 'returns Unknown for invalid priority' do

@@ -23,4 +23,9 @@ RSpec.configure do |config|
   config.profile_examples = 10
   config.order = :random
   Kernel.srand config.seed
+
+  # Skip live integration tests unless LINEAR_API_KEY is set or RUN_LIVE_TESTS=true
+  unless ENV['LINEAR_API_KEY'] || ENV['RUN_LIVE_TESTS'] == 'true'
+    config.filter_run_excluding :live
+  end
 end
