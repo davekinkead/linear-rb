@@ -83,8 +83,14 @@ module Linear
       end
     end
 
-    def update_issue_state(issue_id, state_name, client: Client.new)
-      # Get the issue details including team
+    def update_issue(issue_id, state: nil, title: nil, description: nil, client: Client.new)
+      # 1. Validate at least one change provided
+      if state.nil? && title.nil? && description.nil?
+        puts "Error: At least one of --state, --title, or --description must be provided"
+        return
+      end
+
+      # 2. Fetch issue to get internal UUID
       issue_result = client.query(Queries::ISSUE, { id: issue_id })
       issue = issue_result.dig("data", "issue")
 
@@ -93,65 +99,51 @@ module Linear
         return
       end
 
-      # Get team states - need to find team ID first
-      teams_result = client.query(Queries::TEAMS)
-      teams = teams_result.dig("data", "teams", "nodes") || []
+      # 3. If state provided, resolve state ID (existing logic)
+      state_id = nil
+      target_state = nil
+      if state
+        team_key = issue_id.split('-').first
+        teams_result = client.query(Queries::TEAMS)
+        teams = teams_result.dig("data", "teams", "nodes") || []
+        team = teams.find { |t| t['key'] == team_key }
 
-      # Find the team from the issue identifier prefix (e.g., "FAT" from "FAT-85")
-      team_key = issue_id.split('-').first
-      team = teams.find { |t| t['key'] == team_key }
+        unless team
+          puts "Error: Team not found for issue #{issue_id}"
+          return
+        end
 
-      unless team
-        puts "Error: Team not found for issue #{issue_id}"
-        return
+        states_result = client.query(Queries::WORKFLOW_STATES, { teamId: team['id'] })
+        states = states_result.dig("data", "team", "states", "nodes") || []
+        target_state = states.find { |s| s['name'].downcase == state.downcase }
+
+        unless target_state
+          puts "Error: State '#{state}' not found. Available states:"
+          states.each { |s| puts "  - #{s['name']}" }
+          return
+        end
+
+        state_id = target_state['id']
       end
 
-      # Get workflow states for the team
-      states_result = client.query(Queries::WORKFLOW_STATES, { teamId: team['id'] })
-      states = states_result.dig("data", "team", "states", "nodes") || []
+      # 4. Build mutation parameters
+      params = { issueId: issue['id'] }
+      params[:stateId] = state_id if state_id
+      params[:title] = title if title
+      params[:description] = description if description
 
-      # Find the state by name (case-insensitive)
-      target_state = states.find { |s| s['name'].downcase == state_name.downcase }
+      # 5. Execute mutation
+      result = client.query(Queries::UPDATE_ISSUE, params)
 
-      unless target_state
-        puts "Error: State '#{state_name}' not found. Available states:"
-        states.each { |s| puts "  - #{s['name']}" }
-        return
-      end
-
-      # Update the issue
-      result = client.query(Queries::UPDATE_ISSUE, {
-        issueId: issue['id'],
-        stateId: target_state['id']
-      })
-
+      # 6. Display results
       if result.dig("data", "issueUpdate", "success")
-        puts "Updated #{issue_id} to '#{target_state['name']}'"
+        changes = []
+        changes << "state to '#{target_state['name']}'" if state
+        changes << "title" if title
+        changes << "description" if description
+        puts "Updated #{issue_id}: #{changes.join(', ')}"
       else
-        puts "Error: Failed to update issue state"
-      end
-    end
-
-    def update_issue_description(issue_id, description, client: Client.new)
-      # Get the issue to get its internal ID
-      issue_result = client.query(Queries::ISSUE, { id: issue_id })
-      issue = issue_result.dig("data", "issue")
-
-      unless issue
-        puts "Error: Issue not found: #{issue_id}"
-        return
-      end
-
-      # Update the issue description
-      result = client.query(Queries::UPDATE_ISSUE, {
-        issueId: issue['id'],
-        description: description
-      })
-
-      if result.dig("data", "issueUpdate", "success")
-        puts "Updated #{issue_id} description"
-      else
-        puts "Error: Failed to update issue description"
+        puts "Error: Failed to update issue"
       end
     end
 
