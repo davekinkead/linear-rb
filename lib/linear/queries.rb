@@ -127,15 +127,17 @@ module Linear
     GQL
 
     UPDATE_ISSUE = <<~GQL
-      mutation($issueId: String!, $stateId: String, $description: String) {
+      mutation($issueId: String!, $stateId: String, $description: String, $title: String) {
         issueUpdate(id: $issueId, input: {
           stateId: $stateId
           description: $description
+          title: $title
         }) {
           success
           issue {
             id
             identifier
+            title
             state {
               name
             }

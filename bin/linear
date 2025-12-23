@@ -14,7 +14,10 @@ def show_usage
       linear teams                            List all teams
       linear projects                         List all projects
       linear comment ISSUE_ID COMMENT         Add a comment to an issue
-      linear update ISSUE_ID STATE            Update issue state
+      linear update ISSUE_ID [OPTIONS]        Update issue (at least one option required)
+        --state STATE                         Update issue state
+        --title TITLE                         Update issue title
+        --body BODY                           Update issue description
 
     Issues Filters (all optional, can be combined):
       --query TEXT                      Search by title text
@@ -50,7 +53,12 @@ def show_usage
       linear teams
       linear projects
       linear comment FAT-85 "This is done"
-      linear update FAT-85 "Done"
+
+      # Update issue
+      linear update FAT-85 --state "Done"
+      linear update FAT-85 --title "New title"
+      linear update FAT-85 --body "Updated description"
+      linear update FAT-85 --state "In Progress" --title "Working on it" --body "Started implementation"
 
     Configuration:
       Set the LINEAR_API_KEY environment variable with your API key from:
@@ -135,16 +143,27 @@ when 'comment'
 
 when 'update'
   issue_id = ARGV.shift
-  state_name = ARGV.shift
 
-  if issue_id.nil? || issue_id.empty? || state_name.nil? || state_name.empty?
-    puts "Error: issue ID and state name required"
-    puts "Usage: linear update ISSUE_ID \"State Name\""
+  if issue_id.nil? || issue_id.empty?
+    puts "Error: issue ID required"
+    puts "Usage: linear update ISSUE_ID [--state STATE] [--title TITLE] [--body BODY]"
     exit 1
   end
 
+  options = {}
+  OptionParser.new do |opts|
+    opts.on("--state STATE", "Update issue state") { |v| options[:state] = v }
+    opts.on("--title TITLE", "Update issue title") { |v| options[:title] = v }
+    opts.on("--body BODY", "Update issue description") { |v| options[:body] = v }
+  end.parse!
+
   begin
-    Linear::Commands.update_issue_state(issue_id, state_name)
+    Linear::Commands.update_issue(
+      issue_id,
+      state: options[:state],
+      title: options[:title],
+      description: options[:body]
+    )
   rescue => e
     puts "Error: #{e.message}"
     exit 1
