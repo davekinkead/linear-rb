@@ -416,7 +416,7 @@ RSpec.describe Linear::Commands do
     context 'when no changes are provided' do
       it 'displays error message' do
         expect { described_class.update_issue(issue_id, client: mock_client) }
-          .to output(/Error: At least one of --state, --title, or --body must be provided/).to_stdout
+          .to output(/Error: At least one of --state, --title, or --description must be provided/).to_stdout
       end
     end
 

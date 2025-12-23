@@ -86,7 +86,7 @@ module Linear
     def update_issue(issue_id, state: nil, title: nil, description: nil, client: Client.new)
       # 1. Validate at least one change provided
       if state.nil? && title.nil? && description.nil?
-        puts "Error: At least one of --state, --title, or --body must be provided"
+        puts "Error: At least one of --state, --title, or --description must be provided"
         return
       end
 

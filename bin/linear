@@ -17,7 +17,7 @@ def show_usage
       linear update ISSUE_ID [OPTIONS]        Update issue (at least one option required)
         --state STATE                         Update issue state
         --title TITLE                         Update issue title
-        --body BODY                           Update issue description
+        --description DESCRIPTION             Update issue description
 
     Issues Filters (all optional, can be combined):
       --query TEXT                      Search by title text
@@ -52,13 +52,13 @@ def show_usage
       # Other commands
       linear teams
       linear projects
-      linear comment FAT-85 "This is done"
+      linear comment DEV-85 "This is done"
 
       # Update issue
-      linear update FAT-85 --state "Done"
-      linear update FAT-85 --title "New title"
-      linear update FAT-85 --body "Updated description"
-      linear update FAT-85 --state "In Progress" --title "Working on it" --body "Started implementation"
+      linear update DEV-85 --state "Done"
+      linear update DEV-85 --title "New title"
+      linear update DEV-85 --description "Updated description"
+      linear update DEV-85 --state "In Progress" --title "Working on it" --description "Started implementation"
 
     Configuration:
       Set the LINEAR_API_KEY environment variable with your API key from:
@@ -146,7 +146,7 @@ when 'update'
 
   if issue_id.nil? || issue_id.empty?
     puts "Error: issue ID required"
-    puts "Usage: linear update ISSUE_ID [--state STATE] [--title TITLE] [--body BODY]"
+    puts "Usage: linear update ISSUE_ID [--state STATE] [--title TITLE] [--description DESCRIPTION]"
     exit 1
   end
 
@@ -154,7 +154,7 @@ when 'update'
   OptionParser.new do |opts|
     opts.on("--state STATE", "Update issue state") { |v| options[:state] = v }
     opts.on("--title TITLE", "Update issue title") { |v| options[:title] = v }
-    opts.on("--body BODY", "Update issue description") { |v| options[:body] = v }
+    opts.on("--description DESCRIPTION", "Update issue description") { |v| options[:description] = v }
   end.parse!
 
   begin
@@ -162,7 +162,7 @@ when 'update'
       issue_id,
       state: options[:state],
       title: options[:title],
-      description: options[:body]
+      description: options[:description]
     )
   rescue => e
     puts "Error: #{e.message}"
