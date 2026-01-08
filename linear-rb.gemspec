@@ -1,6 +1,8 @@
+require_relative "lib/linear/version"
+
 Gem::Specification.new do |spec|
   spec.name          = "linear-rb"
-  spec.version       = "0.3.0"
+  spec.version       = Linear::VERSION
   spec.authors       = ["Dave Kinkead"]
   spec.email         = ["hi@davekinkead.com"]
 

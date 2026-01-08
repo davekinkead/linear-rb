@@ -145,13 +145,13 @@ RSpec.describe 'bin/linear', type: :integration do
     context 'when arguments are missing' do
       it 'displays error for missing issue ID' do
         result = run_command('update')
-        expect(result[:stdout]).to include('Error: issue ID and state name required')
+        expect(result[:stdout]).to include('Error: issue ID required')
         expect(result[:status].success?).to be false
       end
 
-      it 'displays error for missing state name' do
+      it 'displays error for missing update options' do
         result = run_command('update', 'FAT-123')
-        expect(result[:stdout]).to include('Error: issue ID and state name required')
+        expect(result[:stdout]).to include('Error: At least one of --state, --title, or --description must be provided')
         expect(result[:status].success?).to be false
       end
     end

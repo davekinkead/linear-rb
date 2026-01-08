@@ -13,6 +13,7 @@ def show_usage
       linear mine                             Show issues assigned to you
       linear teams                            List all teams
       linear projects                         List all projects
+      linear create [OPTIONS]                 Create a new issue
       linear comment ISSUE_ID COMMENT         Add a comment to an issue
       linear update ISSUE_ID [OPTIONS]        Update issue (at least one option required)
         --state STATE                         Update issue state
@@ -24,6 +25,14 @@ def show_usage
       --project PROJECT_ID              Filter by project ID
       --state STATE                     Filter by state name (case-insensitive)
       --team TEAM_KEY                   Filter by team key
+
+    Create Issue Options:
+      --team TEAM_KEY                   Team key (required)
+      --title "TITLE"                   Issue title (required)
+      --description "DESC"              Issue description (optional)
+      --priority PRIORITY               Priority: 0=None, 1=Urgent, 2=High, 3=Medium, 4=Low (optional)
+      --state "STATE"                   State name (optional)
+      --project PROJECT_ID              Project ID (optional)
 
     Examples:
       # View a specific issue
@@ -48,6 +57,11 @@ def show_usage
 
       # Your assigned issues
       linear mine
+
+      # Create a new issue
+      linear create --team ENG --title "Fix login bug"
+      linear create --team ENG --title "Add dark mode" --description "Users want dark mode" --priority 2
+      linear create --team ENG --title "Refactor API" --state "In Progress" --priority 3
 
       # Other commands
       linear teams
@@ -164,6 +178,31 @@ when 'update'
       title: options[:title],
       description: options[:description]
     )
+  rescue => e
+    puts "Error: #{e.message}"
+    exit 1
+  end
+
+when 'create'
+  options = {}
+  OptionParser.new do |opts|
+    opts.on("--team TEAM", "Team key (required)") { |v| options[:team] = v }
+    opts.on("--title TITLE", "Issue title (required)") { |v| options[:title] = v }
+    opts.on("--description DESC", "Issue description") { |v| options[:description] = v }
+    opts.on("--priority PRIORITY", "Priority (0-4)") { |v| options[:priority] = v }
+    opts.on("--state STATE", "State name") { |v| options[:state] = v }
+    opts.on("--assignee EMAIL", "Assignee email") { |v| options[:assignee] = v }
+    opts.on("--project PROJECT", "Project ID") { |v| options[:project] = v }
+  end.parse!
+
+  unless options[:team] && options[:title]
+    puts "Error: --team and --title are required"
+    puts "Usage: linear create --team TEAM --title \"Issue title\" [OPTIONS]"
+    exit 1
+  end
+
+  begin
+    Linear::Commands.create_issue(options)
   rescue => e
     puts "Error: #{e.message}"
     exit 1

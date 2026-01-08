@@ -1,5 +1,6 @@
 require 'bundler/setup'
 require 'linear'
+require_relative 'support/commands_helper'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
