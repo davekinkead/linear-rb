@@ -151,6 +151,7 @@ RSpec.describe 'bin/linear', type: :integration do
 
       it 'displays error for missing update options' do
         result = run_command('update', 'FAT-123')
+        pp result
         expect(result[:stdout]).to include('Error: At least one of --state, --title, or --description must be provided')
         expect(result[:status].success?).to be false
       end
