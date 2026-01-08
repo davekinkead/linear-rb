@@ -110,12 +110,11 @@ client = Linear::Client.new
 result = client.query(Linear::Queries::ISSUE, { id: "ENG-123" })
 
 # Or use commands
-Linear::Commands.fetch_issue("ENG-123")
 Linear::Commands.search("bug", team: "ENG")
 Linear::Commands.my_issues
+Linear::Commands.fetch_issue("ENG-123")
+Linear::Commands.update_issue("ENG-85", state: "Done", title: "New title", description: "New description")
 Linear::Commands.add_comment("DEV-85", "Great work!")
-Linear::Commands.update_issue_state("ENG-85", "Done")
-Linear::Commands.update_issue_description("MKT-85", "Updated description")
 ```
 
 
